@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.game.cargame.objects.Background;
 import com.game.cargame.objects.Car;
+import com.game.cargame.objects.MovementType;
 import com.game.cargame.objects.Road;
 
 public class GameScreen implements Screen {
@@ -16,6 +17,9 @@ public class GameScreen implements Screen {
     Car blueCar;
     Car redCar;
     Car yellowCar;
+
+    Thread blueCarThread;
+    Thread redCarThread;
 
     Background bg;
     Road road;
@@ -28,18 +32,20 @@ public class GameScreen implements Screen {
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 1200, 1080);
 
-        blueCar = new Car("Blue Car", "car1.png", 100, 100);
-        redCar = new Car("Red Car", "car2.png", 200, 100);
-        yellowCar = new Car("Yellow Car", "car3.png", 300, 100);
+        blueCar = new Car("Blue Car", "car1.png", 100, 100, MovementType.WASD);
+        redCar = new Car("Red Car", "car2.png", 500, 100, MovementType.RLUD);
+//        yellowCar = new Car("Yellow Car", "car3.png", 300, 100);
 
         bg = new Background();
         road = new Road();
 
         batch = game.batch;
+        blueCarThread = new Thread(blueCar, "Blue Car Thread");
+        redCarThread = new Thread(redCar, "Red Car Thread");
 
-        blueCar.start();
-        redCar.start();
-        yellowCar.start();
+        blueCarThread.start();
+        redCarThread.start();
+
     }
 
     @Override
@@ -54,7 +60,7 @@ public class GameScreen implements Screen {
         camera.update();
         batch.setProjectionMatrix(camera.combined);
 
-        updateAll(delta);
+        updateAll();
         renderAll();
     }
 
@@ -63,21 +69,24 @@ public class GameScreen implements Screen {
 
     }
 
-    private void updateAll(float delta) {
-//        bg.update(delta);
-//        road.update(delta);
-//        blueCar.update(delta);
-//        redCar.update(delta);
-//        yellowCar.update(delta);
+    private void updateAll() {
+        // Synchronize to ensure thread-safe update and retrieval of car positions
+        synchronized (blueCar) {
+            blueCar.update(Gdx.graphics.getDeltaTime());
+        }
+        synchronized (redCar) {
+            redCar.update(Gdx.graphics.getDeltaTime());
+        }
     }
 
     private void renderAll() {
         batch.begin();
-//        bg.render(batch);
-//        road.render(batch);
-        blueCar.render(batch);
-        redCar.render(batch);
-        yellowCar.render(batch);
+        synchronized (blueCar) {
+            blueCar.getSprite().draw(batch);
+        }
+        synchronized (redCar) {
+            redCar.getSprite().draw(batch);
+        }
         batch.end();
     }
 

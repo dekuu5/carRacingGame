@@ -8,12 +8,21 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-import java.util.function.Function;
-
 public class Car implements Runnable {
+
+    private interface keyMovement
+    {
+        void updateSpeed(float delta);
+    }
+
+
+
 
     private String name;
     private Texture img;
+
+
+
     private Sprite sprite;
     private Rectangle rect;
     private Vector2 position;
@@ -21,10 +30,10 @@ public class Car implements Runnable {
     private float speedX;
     private float speedY;
     private float acceleration;
-    private Function
+    private keyMovement updateSpeed;
 
 
-    public Car(String name, String texturePath, float startX, float startY, String type) {
+    public Car(String name, String texturePath, float startX, float startY, MovementType type) {
         this.name = name;
         this.img = new Texture(Gdx.files.internal(texturePath));
         this.sprite = new Sprite(img);
@@ -34,6 +43,12 @@ public class Car implements Runnable {
         this.speedY = 0;
         this.acceleration = 50; // Example acceleration value
         this.rect = new Rectangle(position.x, position.y, sprite.getWidth(), sprite.getHeight());
+        if (type == MovementType.RLUD) {
+            updateSpeed = this::updateSpeedLRUD;
+        }else if (type == MovementType.WASD) {
+
+            updateSpeed = this::updateSpeedWASD;
+        }
 
     }
 
@@ -43,9 +58,14 @@ public class Car implements Runnable {
         while (true) {
             float delta = Gdx.graphics.getDeltaTime();
             update(delta);
+            try {
+                Thread.sleep(16); // approximately 60 FPS
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+
+            }
         }
     }
-
     public void update(float delta) {
         // Update position based on speed and direction
         position.x += velocity.x * delta;
@@ -53,7 +73,7 @@ public class Car implements Runnable {
         rect.setPosition(position);
 
         // Update speed based on input
-        updateSpeed(delta);
+        updateSpeed.updateSpeed(delta);
 
         // Update velocity based on speed and direction
         updateVelocity();
@@ -63,7 +83,25 @@ public class Car implements Runnable {
         System.out.println(name + "x : " + position.x + " y : " + position.y);
     }
 
-    private void updateSpeed(float delta) {
+
+    private void updateSpeedWASD(float delta){
+        if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+            speedY += acceleration * delta;
+        } else if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+            speedY -= acceleration * delta;
+        } else {
+            speedY = 0;
+        }
+        // Horizontal movement
+        if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+            speedX += acceleration * delta;
+        } else if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+            speedX -= acceleration * delta;
+        }else {
+            speedX = 0;
+        }
+    }
+    private void updateSpeedLRUD(float delta) {
         // Vertical movement
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
             speedY += acceleration * delta;
@@ -122,5 +160,8 @@ public class Car implements Runnable {
 
     public void setSpeedY(float speedY) {
         this.speedY = speedY;
+    }
+    public Sprite getSprite() {
+        return sprite;
     }
 }
