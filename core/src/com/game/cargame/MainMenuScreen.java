@@ -5,6 +5,11 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.utils.ScreenUtils;
 
+// TODO : make a better main menu screen
+// which takes input for names and players
+
+
+
 public class MainMenuScreen implements Screen {
     final CarGame game;
 

@@ -9,7 +9,7 @@ public class DesktopLauncher {
 	public static void main (String[] arg) {
 		Lwjgl3ApplicationConfiguration config = new Lwjgl3ApplicationConfiguration();
 		config.setForegroundFPS(60);
-		config.setWindowedMode(1200, 1080);
+		config.setWindowedMode(800, 800);
 		config.useVsync(true);
 		config.setTitle("carRacingGame");
 		config.setResizable(false);
