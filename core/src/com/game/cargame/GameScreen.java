@@ -81,6 +81,8 @@ public class GameScreen implements Screen {
 
     private void renderAll() {
         batch.begin();
+        road.render(batch);
+
         synchronized (blueCar) {
             blueCar.getSprite().draw(batch);
         }
