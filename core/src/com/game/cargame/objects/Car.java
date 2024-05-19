@@ -80,7 +80,7 @@ public class Car implements Runnable {
 
         // Update the sprite's position
         sprite.setPosition(position.x, position.y);
-        System.out.println(name + "x : " + position.x + " y : " + position.y);
+   //     System.out.println(name + "x : " + position.x + " y : " + position.y);
     }
 
 
