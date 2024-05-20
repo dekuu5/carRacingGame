@@ -20,7 +20,7 @@ public class Road {
         this.speed = 0 ; // Adjust the speed as needed
     }
 
-    public void update(float deltaTime, float cameraY, float speed) {
+    public void update(float deltaTime, float cameraY) {
         roadY1 -= speed * deltaTime;
         roadY2 -= speed * deltaTime;
         roadY3 -= speed * deltaTime;

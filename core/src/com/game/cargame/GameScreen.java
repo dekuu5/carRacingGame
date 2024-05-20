@@ -51,7 +51,7 @@ public class GameScreen implements Screen {
         playerTwoViewport = new ScreenViewport(playerTwoCamera);
 
 
-        blueCar = new Car("Blue Car", "car1.png", 700, 0, MovementType.WASD);
+        blueCar = new Car("Blue Car", "car1.png", 700, -540, MovementType.WASD);
         redCar = new Car("Red Car", "car2.png", 500, 0, MovementType.RLUD);
 
         bg = new Background();
@@ -94,9 +94,7 @@ public class GameScreen implements Screen {
         viewport.apply();
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), 800);
 
-            updateCamera(camera, blueCar);
-            camera.update();
-
+        updateCamera(camera, blueCar);
         batch.setProjectionMatrix(camera.combined);
 
 
@@ -117,7 +115,7 @@ public class GameScreen implements Screen {
     }
 
     private void updateAll(float delta) {
-        road.update(delta, camera.position.y, blueCar.getSpeedY());
+        road.update(delta, camera.position.y);
         synchronized (blueCar) {
             blueCar.update(delta);
             keepWithinBounds(blueCar);

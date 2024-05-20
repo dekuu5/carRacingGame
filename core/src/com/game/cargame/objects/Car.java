@@ -87,7 +87,7 @@ public class Car implements Runnable {
     private void updateSpeedWASD(float delta){
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
             speedY += acceleration * delta;
-        } else {
+        } else if (Gdx.input.isKeyPressed(Input.Keys.S)){
             speedY -= acceleration * delta;
         }
         // Horizontal movement
@@ -103,7 +103,7 @@ public class Car implements Runnable {
         // Vertical movement
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
             speedY += acceleration * delta;
-        } else {
+        } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)){
             speedY -= acceleration * delta;
         }
 
