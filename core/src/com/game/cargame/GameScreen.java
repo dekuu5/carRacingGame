@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.game.cargame.objects.Background;
@@ -28,7 +29,7 @@ public class GameScreen implements Screen {
     Background bg;
     Road road;
     SpriteBatch batch;
-    FitViewport viewport;
+    FillViewport viewport;
     ScreenViewport playerOneViewport;
     ScreenViewport playerTwoViewport;
 
@@ -36,12 +37,12 @@ public class GameScreen implements Screen {
         this.game = game;
 
         camera = new OrthographicCamera();
-        camera.setToOrtho(false, 1200, 1080);
+        camera.setToOrtho(false, 800, 800);
         camera.position.set(1200 / 2f, 350, 0);
         camera.update();
         playerOneCamera = new OrthographicCamera();
         playerTwoCamera = new OrthographicCamera();
-        viewport = new FitViewport(800, 800, camera);
+        viewport = new FillViewport(800, 800, camera);
         playerOneViewport = new ScreenViewport(playerOneCamera);
         playerTwoViewport = new ScreenViewport(playerTwoCamera);
 
@@ -84,6 +85,7 @@ public class GameScreen implements Screen {
 //        playerOneViewport.update(width / 2, height);
 //        playerTwoViewport.update(width, height);
 //        playerTwoViewport.setScreenX(width / 2);
+          viewport.update(width, height);
     }
 
     private void updateAll(float delta) {
