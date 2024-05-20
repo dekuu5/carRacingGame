@@ -5,14 +5,14 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FillViewport;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.game.cargame.objects.Background;
-import com.game.cargame.objects.Car;
-import com.game.cargame.objects.MovementType;
-import com.game.cargame.objects.Road;
+import com.game.cargame.CarGame;
+import com.game.cargame.objects.*;
+import com.game.cargame.objects.Obstacle;
 
 public class GameScreen implements Screen {
     final CarGame game;
@@ -32,6 +32,7 @@ public class GameScreen implements Screen {
     FillViewport viewport;
     ScreenViewport playerOneViewport;
     ScreenViewport playerTwoViewport;
+    Obstacle[] Obstacls;
 
     public GameScreen(CarGame game) {
         this.game = game;
@@ -59,6 +60,23 @@ public class GameScreen implements Screen {
 
         blueCarThread.start();
         redCarThread.start();
+
+        batch = new SpriteBatch();
+
+        // Initialize the array of obstacles
+        int numberOfObstacles = 5;
+        Obstacls = new Obstacle[numberOfObstacles];
+
+        // Get screen dimensions
+        float screenWidth = Gdx.graphics.getWidth();
+        float screenHeight = Gdx.graphics.getHeight();
+
+        // Initialize obstacles at random positions
+        for (int i = 0; i < numberOfObstacles; i++) {
+            float x = MathUtils.random(0, screenWidth - 64); // Adjust 64 to the width of your texture
+            float y = MathUtils.random(0, screenHeight - 64); // Adjust 64 to the height of your texture
+            Obstacls[i] = new Obstacle(x,y  );
+        }
     }
 
     @Override
@@ -72,9 +90,13 @@ public class GameScreen implements Screen {
         viewport.apply();
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), 800);
         if(blueCar.getSpeedY()!=0){
-        updateCamera(camera, blueCar);
-        camera.update();}
+            updateCamera(camera, blueCar);
+            camera.update();}
+
         batch.setProjectionMatrix(camera.combined);
+
+
+
 
         updateAll(delta);
         renderAll();
@@ -85,7 +107,7 @@ public class GameScreen implements Screen {
 //        playerOneViewport.update(width / 2, height);
 //        playerTwoViewport.update(width, height);
 //        playerTwoViewport.setScreenX(width / 2);
-          viewport.update(width, height);
+        viewport.update(width, height);
     }
 
     private void updateAll(float delta) {
@@ -95,24 +117,24 @@ public class GameScreen implements Screen {
         synchronized (redCar) {
             redCar.update(delta);
         }
-          road.update(delta, camera.position.y, blueCar.getSpeedY());
-//        road.update(delta, playerTwoCamera.position.y);
+//        for (Obstacals obstacle : Obstacals) {
+//            obstacle.update(delta, blueCar.getSpeedY());
+//        }
+//       road.update(delta, playerTwoCamera.position.y);
     }
 
     private void renderAll() {
-     //   updateCamera(camera, blueCar);
+        //   updateCamera(camera, blueCar);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         road.render(batch, camera.position.y);
+        for (Obstacle obstacle : Obstacls) {
+            obstacle.render(batch);
+        }
         synchronized (blueCar) {
             blueCar.getSprite().draw(batch);
         }
-//        batch.end();
-//
-//        updateCamera(camera, redCar);
-//        batch.setProjectionMatrix(playerTwoCamera.combined);
-//        batch.begin();
-//        road.render(batch, playerTwoCamera.position.y);
+
         synchronized (redCar) {
             redCar.getSprite().draw(batch);
         }
@@ -143,6 +165,11 @@ public class GameScreen implements Screen {
     public void dispose() {
         blueCar.dispose();
         redCar.dispose();
+        batch.dispose();
+        for (Obstacle obstacle : Obstacls) {
+            obstacle.dispose();
+        }
+
 
     }
 }
