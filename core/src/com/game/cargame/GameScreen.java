@@ -5,6 +5,8 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g3d.utils.MeshBuilder;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FillViewport;
@@ -33,6 +35,7 @@ public class GameScreen implements Screen {
     ScreenViewport playerOneViewport;
     ScreenViewport playerTwoViewport;
     Obstacle[] Obstacls;
+    ShapeRenderer shapeRenderer;
 
     public GameScreen(CarGame game) {
         this.game = game;
@@ -57,6 +60,7 @@ public class GameScreen implements Screen {
 
         blueCarThread = new Thread(blueCar, "Blue Car Thread");
         redCarThread = new Thread(redCar, "Red Car Thread");
+        shapeRenderer = new ShapeRenderer();
 
         blueCarThread.start();
         redCarThread.start();
@@ -89,9 +93,9 @@ public class GameScreen implements Screen {
         ScreenUtils.clear(0, 0, 0, 1);
         viewport.apply();
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), 800);
-        if(blueCar.getSpeedY()!=0){
+
             updateCamera(camera, blueCar);
-            camera.update();}
+            camera.update();
 
         batch.setProjectionMatrix(camera.combined);
 
@@ -100,6 +104,8 @@ public class GameScreen implements Screen {
 
         updateAll(delta);
         renderAll();
+        //drawBorders();
+
     }
 
     @Override
@@ -111,6 +117,7 @@ public class GameScreen implements Screen {
     }
 
     private void updateAll(float delta) {
+        road.update(delta, camera.position.y, blueCar.getSpeedY());
         synchronized (blueCar) {
             blueCar.update(delta);
         }
