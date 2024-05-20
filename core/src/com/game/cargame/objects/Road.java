@@ -1,6 +1,5 @@
 package com.game.cargame.objects;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 
@@ -15,13 +14,13 @@ public class Road {
 
     public Road() {
         this.roadTexture = new Texture("background-1.png");
-        this.roadY1 = 0;
-        this.roadY2 = roadTexture.getHeight();
-        this.roadY3 = roadTexture.getHeight() * 2;
+        this.roadY1 = -540;
+        this.roadY2 = roadTexture.getHeight()-540;
+        this.roadY3 = roadTexture.getHeight() * 2-540;
         this.speed = 0 ; // Adjust the speed as needed
     }
 
-    public void update(float deltaTime, float cameraY, float cspeed) {
+    public void update(float deltaTime, float cameraY, float speed) {
         roadY1 -= speed * deltaTime;
         roadY2 -= speed * deltaTime;
         roadY3 -= speed * deltaTime;
@@ -39,7 +38,6 @@ public class Road {
         if (roadY3 + roadTexture.getHeight() <= cameraY-1080/2.0) {
             roadY3 = roadY2+  roadTexture.getHeight();
         }
-        System.out.println("Road Y2: " + roadY2);
 
         //   render(new SpriteBatch(), cameraY);
     }
