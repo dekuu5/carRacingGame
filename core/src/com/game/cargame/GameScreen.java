@@ -120,9 +120,11 @@ public class GameScreen implements Screen {
         road.update(delta, camera.position.y, blueCar.getSpeedY());
         synchronized (blueCar) {
             blueCar.update(delta);
+            keepWithinBounds(blueCar);
         }
         synchronized (redCar) {
             redCar.update(delta);
+            keepWithinBounds(redCar);
         }
 //        for (Obstacals obstacle : Obstacals) {
 //            obstacle.update(delta, blueCar.getSpeedY());
@@ -151,6 +153,24 @@ public class GameScreen implements Screen {
     private void updateCamera(Camera camera, Car car) {
         camera.position.set(camera.position.x, car.getPosition().y + car.getSprite().getHeight() / 2, 0);
         camera.update();
+    }
+    private void keepWithinBounds(Car car) {
+        float carWidth = car.getSprite().getWidth();
+        float carHeight = car.getSprite().getHeight();
+      //  System.out.println("Car x: " + car.getPosition().x + " Car y: " + car.getPosition().y);
+        // Ensure the car stays within the screen bounds
+        if (car.getPosition().x < 350) {
+            car.setPosition(350, car.getPosition().y);
+        }
+        if (car.getPosition().x > 800) {
+            car.setPosition(800 , car.getPosition().y);
+        }
+        if (car.getPosition().y < 0) {
+            car.setPosition(car.getPosition().x, 0);
+        }
+//        if (car.getPosition().y + carHeight > Gdx.graphics.getHeight()) {
+//            car.setPosition(car.getPosition().x, Gdx.graphics.getHeight() - carHeight);
+//        }
     }
 
     @Override

@@ -24,6 +24,7 @@ public class Road {
         roadY1 -= speed * deltaTime;
         roadY2 -= speed * deltaTime;
         roadY3 -= speed * deltaTime;
+        System.out.println("roadY1: " + roadY1 + " roadY2: " + roadY2 + " roadY3: " + roadY3 + " cameraY: " + cameraY + " speed: " + speed);
         // If the first road texture goes off-screen, reset its position
         if (roadY1 + roadTexture.getHeight() <= cameraY-1080/2.0 ) {
             roadY1 = roadY3 + roadTexture.getHeight();
