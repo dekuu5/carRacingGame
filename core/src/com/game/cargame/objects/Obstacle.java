@@ -14,8 +14,14 @@ public class Obstacle {
         this.position = new Vector2(x, y);
     }
 
-    public void update(float deltaTime) {
+    public void update(float deltaTime, float cameraY, float screenHeight) {
+        // Update the obstacle's position based on time and speed
         position.y -= 0 * deltaTime;
+
+        // Reposition the obstacle if it moves out of view
+        if (position.y + texture.getHeight() < cameraY - screenHeight / 2) {
+            reposition(cameraY + screenHeight / 2);
+        }
     }
 
     public void render(SpriteBatch batch) {
@@ -28,5 +34,11 @@ public class Obstacle {
 
     public void dispose() {
         texture.dispose();
+    }
+
+    private void reposition(float newY) {
+        // Reposition the obstacle to a new position above the current view
+        float x = (float) (Math.random() * (800 - texture.getWidth())); // Adjust 800 to your game's width
+        position.set(x, newY + texture.getHeight());
     }
 }

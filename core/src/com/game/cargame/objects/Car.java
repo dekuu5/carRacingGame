@@ -4,25 +4,17 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
 public class Car implements Runnable {
 
-    private interface keyMovement
-    {
+    private interface keyMovement {
         void updateSpeed(float delta);
     }
 
-
-
-
     private String name;
     private Texture img;
-
-
-
     private Sprite sprite;
     private Rectangle rect;
     private Vector2 position;
@@ -30,8 +22,8 @@ public class Car implements Runnable {
     private float speedX;
     private float speedY;
     private float acceleration;
+    private float maxSpeed;
     private keyMovement updateSpeed;
-
 
     public Car(String name, String texturePath, float startX, float startY, MovementType type) {
         this.name = name;
@@ -41,17 +33,15 @@ public class Car implements Runnable {
         this.velocity = new Vector2(0, 0);
         this.speedX = 0;
         this.speedY = 0;
-        this.acceleration = 50; // Example acceleration value
+        this.acceleration = 10; // Example acceleration value
+        this.maxSpeed = 300; // Maximum speed limit
         this.rect = new Rectangle(position.x, position.y, sprite.getWidth(), sprite.getHeight());
         if (type == MovementType.RLUD) {
             updateSpeed = this::updateSpeedLRUD;
-        }else if (type == MovementType.WASD) {
-
+        } else if (type == MovementType.WASD) {
             updateSpeed = this::updateSpeedWASD;
         }
-
     }
-
 
     @Override
     public void run() {
@@ -62,10 +52,10 @@ public class Car implements Runnable {
                 Thread.sleep(16); // approximately 60 FPS
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-
             }
         }
     }
+
     public void update(float delta) {
         // Update position based on speed and direction
         position.x += velocity.x * delta;
@@ -75,16 +65,18 @@ public class Car implements Runnable {
         // Update speed based on input
         updateSpeed.updateSpeed(delta);
 
+        // Apply speed limit
+        speedY = Math.min(speedY, maxSpeed);
+        speedX = Math.min(speedX, maxSpeed);
+
         // Update velocity based on speed and direction
         updateVelocity();
 
         // Update the sprite's position
         sprite.setPosition(position.x, position.y);
-   //     System.out.println(name + "x : " + position.x + " y : " + position.y);
     }
 
-
-    private void updateSpeedWASD(float delta){
+    private void updateSpeedWASD(float delta) {
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
             speedY += acceleration * delta;
         } else if (Gdx.input.isKeyPressed(Input.Keys.S)) {
@@ -92,17 +84,16 @@ public class Car implements Runnable {
         } else {
             speedY = 0;
         }
-        // Horizontal movement
         if (Gdx.input.isKeyPressed(Input.Keys.D)) {
             speedX += acceleration * delta;
         } else if (Gdx.input.isKeyPressed(Input.Keys.A)) {
             speedX -= acceleration * delta;
-        }else {
+        } else {
             speedX = 0;
         }
     }
+
     private void updateSpeedLRUD(float delta) {
-        // Vertical movement
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
             speedY += acceleration * delta;
         } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
@@ -110,13 +101,11 @@ public class Car implements Runnable {
         } else {
             speedY = 0;
         }
-
-        // Horizontal movement
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
             speedX += acceleration * delta;
         } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
             speedX -= acceleration * delta;
-        }else {
+        } else {
             speedX = 0;
         }
     }
@@ -125,9 +114,9 @@ public class Car implements Runnable {
         velocity.set(speedX, speedY);
     }
 
-    public void render(SpriteBatch batch) {
-        sprite.draw(batch);
-    }
+//    public void render(SpriteBatch batch) {
+//        sprite.draw(batch);
+//    }
 
     public void dispose() {
         img.dispose();
@@ -161,7 +150,16 @@ public class Car implements Runnable {
     public void setSpeedY(float speedY) {
         this.speedY = speedY;
     }
+
     public Sprite getSprite() {
         return sprite;
+    }
+
+    public float getMaxSpeed() {
+        return maxSpeed;
+    }
+
+    public void setMaxSpeed(float maxSpeed) {
+        this.maxSpeed = maxSpeed;
     }
 }
