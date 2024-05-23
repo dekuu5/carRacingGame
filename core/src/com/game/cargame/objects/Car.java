@@ -4,25 +4,19 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
+import java.util.List;
+
 public class Car implements Runnable {
 
-    private interface keyMovement
-    {
+    private interface MovementStrategy {
         void updateSpeed(float delta);
     }
 
-
-
-
     private String name;
     private Texture img;
-
-
-
     private Sprite sprite;
     private Rectangle rect;
     private Vector2 position;
@@ -30,8 +24,10 @@ public class Car implements Runnable {
     private float speedX;
     private float speedY;
     private float acceleration;
-    private keyMovement updateSpeed;
-
+    private float maxSpeed;
+    private boolean isStopped;
+    private MovementStrategy movementStrategy;
+    private List <Obstacle> obstacles;
 
     public Car(String name, String texturePath, float startX, float startY, MovementType type) {
         this.name = name;
@@ -41,17 +37,19 @@ public class Car implements Runnable {
         this.velocity = new Vector2(0, 0);
         this.speedX = 0;
         this.speedY = 0;
-        this.acceleration = 50; // Example acceleration value
+        this.acceleration = 41; // Example acceleration value
+        this.maxSpeed = 300; // Maximum speed limit
         this.rect = new Rectangle(position.x, position.y, sprite.getWidth(), sprite.getHeight());
+        this.isStopped = false;
+
         if (type == MovementType.RLUD) {
-            updateSpeed = this::updateSpeedLRUD;
-        }else if (type == MovementType.WASD) {
-
-            updateSpeed = this::updateSpeedWASD;
+            movementStrategy = this::updateSpeedLRUD;
+        } else if (type == MovementType.WASD) {
+            movementStrategy = this::updateSpeedWASD;
+        } else if (type == MovementType.AI) {
+            movementStrategy = this::updateSpeedAI;
         }
-
     }
-
 
     @Override
     public void run() {
@@ -62,67 +60,134 @@ public class Car implements Runnable {
                 Thread.sleep(16); // approximately 60 FPS
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-
             }
         }
     }
+
     public void update(float delta) {
+        if (isStopped) {
+            return;
+        }
+
         // Update position based on speed and direction
         position.x += velocity.x * delta;
         position.y += velocity.y * delta;
         rect.setPosition(position);
 
         // Update speed based on input
-        updateSpeed.updateSpeed(delta);
+        movementStrategy.updateSpeed(delta);
+
+        // Apply speed limit
+        speedY = Math.min(speedY, maxSpeed);
+        speedX = Math.min(speedX, maxSpeed);
 
         // Update velocity based on speed and direction
         updateVelocity();
 
         // Update the sprite's position
+        constrainPosition();
         sprite.setPosition(position.x, position.y);
-   //     System.out.println(name + "x : " + position.x + " y : " + position.y);
     }
-
-
-    private void updateSpeedWASD(float delta){
+    private void constrainPosition() {
+        // Constrain the car's position within the screen bounds
+        if (position.x < 320) {
+            position.x = 320;
+        }
+        if (position.x > 800) {
+            position.x = 800;
+        }
+        if (position.y < 0) {
+            position.y = 0;
+        }
+        if (position.y > Gdx.graphics.getHeight() - rect.height) {
+            position.y = Gdx.graphics.getHeight() - rect.height;
+        }
+    }
+    private void updateSpeedWASD(float delta) {
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {
             speedY += acceleration * delta;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.S)){
+        } else if (Gdx.input.isKeyPressed(Input.Keys.S)) {
             speedY -= acceleration * delta;
+        } else {
+            speedY = 0;
         }
-        // Horizontal movement
         if (Gdx.input.isKeyPressed(Input.Keys.D)) {
             speedX += acceleration * delta;
         } else if (Gdx.input.isKeyPressed(Input.Keys.A)) {
             speedX -= acceleration * delta;
-        }else {
+        } else {
             speedX = 0;
         }
     }
+
     private void updateSpeedLRUD(float delta) {
-        // Vertical movement
         if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
             speedY += acceleration * delta;
-        } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)){
+        } else if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
             speedY -= acceleration * delta;
+        } else {
+            speedY = 0;
         }
-
-        // Horizontal movement
         if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
             speedX += acceleration * delta;
         } else if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
             speedX -= acceleration * delta;
-        }else {
+        } else {
             speedX = 0;
         }
     }
+
+    private void updateSpeedAI(float delta) {
+        // AI logic for automatic movement and obstacle avoidance
+        speedY += acceleration * delta;
+        Boolean obstacleDetected = false;
+        for (Obstacle obstacle : obstacles) {
+            while (isNearObstacle(obstacle)) {
+                obstacleDetected = true;
+                break;
+            }
+            if (obstacleDetected) {
+                float obstacleCenterX = obstacle.getBounds().x + obstacle.getBounds().width / 2;
+                float carCenterX = position.x + rect.width / 2;
+
+                if (carCenterX < obstacleCenterX) {
+                    // Move left
+                    speedX -= 20 * delta;
+                } else {
+                    // Move right
+                    speedX += 20 * delta;
+                }
+            } else {
+                speedX = 0; // Keep moving straight
+            }
+        }
+    }
+
+    private boolean isNearObstacle(Obstacle obstacle) {
+        int avoidanceDistance = 250; // Example avoidance distance
+         int obstacleX = (int) obstacle.getBounds().x;
+        int obstacleY = (int) obstacle.getBounds().y;
+        int carX = (int) position.x;
+        int carY = (int) position.y;
+       return Math.abs(obstacleX - carX) < avoidanceDistance && Math.abs(obstacleY - carY) < avoidanceDistance;
+
+
+    }
+
 
     private void updateVelocity() {
         velocity.set(speedX, speedY);
     }
 
-    public void render(SpriteBatch batch) {
-        sprite.draw(batch);
+    public void stopCar() {
+        isStopped = true;
+        speedX = 0;
+        speedY = 0;
+        velocity.set(speedX, speedY);
+    }
+
+    public void startCar() {
+        isStopped = false;
     }
 
     public void dispose() {
@@ -138,8 +203,12 @@ public class Car implements Runnable {
     }
 
     public void setPosition(float x, float y) {
-        this.position = new Vector2(x, y);
-        rect.setPosition(position);
+        this.position = position;
+        rect.setPosition(x, y);
+    }
+
+    public void setObstacles(List <Obstacle> obstacles) {
+        this.obstacles = obstacles;
     }
 
     public float getSpeedX() {
@@ -157,7 +226,21 @@ public class Car implements Runnable {
     public void setSpeedY(float speedY) {
         this.speedY = speedY;
     }
+
     public Sprite getSprite() {
         return sprite;
     }
+
+    public float getMaxSpeed() {
+        return maxSpeed;
+    }
+
+    public void setMaxSpeed(float maxSpeed) {
+        this.maxSpeed = maxSpeed;
+    }
+
+    public float getAcceleration() {
+        return acceleration;
+    }
+
 }

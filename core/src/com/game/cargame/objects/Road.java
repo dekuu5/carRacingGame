@@ -8,50 +8,39 @@ public class Road {
     private float roadY1;
     private float roadY2;
     private float roadY3;
-    private float speed;
-    private float carSpeed;
-
+    private float maxSpeed;
 
     public Road() {
         this.roadTexture = new Texture("background-1.png");
         this.roadY1 = -540;
-        this.roadY2 = roadTexture.getHeight()-540;
-        this.roadY3 = roadTexture.getHeight() * 2-540;
-        this.speed = 0 ; // Adjust the speed as needed
+        this.roadY2 = roadTexture.getHeight() - 540;
+        this.roadY3 = roadTexture.getHeight() * 2 - 540;
+        this.maxSpeed = 300; // Maximum speed limit for the road
     }
 
-    public void update(float deltaTime, float cameraY) {
+    public void update(float deltaTime, float cameraY, float speed) {
+        // Apply speed limit
+        speed = Math.min(speed, maxSpeed);
+
         roadY1 -= speed * deltaTime;
         roadY2 -= speed * deltaTime;
         roadY3 -= speed * deltaTime;
-        System.out.println("roadY1: " + roadY1 + " roadY2: " + roadY2 + " roadY3: " + roadY3 + " cameraY: " + cameraY + " speed: " + speed);
-        // If the first road texture goes off-screen, reset its position
-        if (roadY1 + roadTexture.getHeight() <= cameraY-1080/2.0 ) {
+
+        if (roadY1 + roadTexture.getHeight() <= cameraY - 1080 / 2.0) {
             roadY1 = roadY3 + roadTexture.getHeight();
-
         }
-        // If the second road texture goes off-screen, reset its position
-        if (roadY2 + roadTexture.getHeight() <= cameraY-1080/2.0) {
+        if (roadY2 + roadTexture.getHeight() <= cameraY - 1080 / 2.0) {
             roadY2 = roadY1 + roadTexture.getHeight();
-
         }
-        // If the second road texture goes off-screen, reset its position
-        if (roadY3 + roadTexture.getHeight() <= cameraY-1080/2.0) {
-            roadY3 = roadY2+  roadTexture.getHeight();
+        if (roadY3 + roadTexture.getHeight() <= cameraY - 1080 / 2.0) {
+            roadY3 = roadY2 + roadTexture.getHeight();
         }
-
-        //   render(new SpriteBatch(), cameraY);
     }
 
     public void render(SpriteBatch batch, float cameraY) {
-        // Render the first road texture
-         batch.draw(roadTexture,180, roadY1);
-
-        // Render the second road texture below the first one
-        batch.draw(roadTexture, 180 ,  roadY2);
-        batch.draw(roadTexture,  180,  roadY3);
-
-
+        batch.draw(roadTexture, 180, roadY1);
+        batch.draw(roadTexture, 180, roadY2);
+        batch.draw(roadTexture, 180, roadY3);
     }
 
     public void dispose() {

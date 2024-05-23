@@ -3,42 +3,46 @@ package com.game.cargame;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g3d.utils.MeshBuilder;
-import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FillViewport;
-import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import com.game.cargame.CarGame;
-import com.game.cargame.objects.*;
+import com.game.cargame.objects.Car;
+import com.game.cargame.objects.MovementType;
 import com.game.cargame.objects.Obstacle;
+import com.game.cargame.objects.Road;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class GameScreen implements Screen {
     final CarGame game;
+    int blueCarScore = 0;
+    int blueCarHealth = 4;
     OrthographicCamera camera;
     Camera playerOneCamera;
     Camera playerTwoCamera;
-
+    BitmapFont font;
     final Car blueCar;
     final Car redCar;
-    Car yellowCar;
-    Thread blueCarThread;
-    Thread redCarThread;
-
-    Background bg;
+    int numberOfObstacles;
     Road road;
     SpriteBatch batch;
     FillViewport viewport;
     ScreenViewport playerOneViewport;
     ScreenViewport playerTwoViewport;
-    Obstacle[] Obstacls;
-    ShapeRenderer shapeRenderer;
-
+    List <Obstacle> obstacles;
+    boolean isBlueCarMoving = false;
+    boolean gameOver = false;
     public GameScreen(CarGame game) {
         this.game = game;
+
+        font = new BitmapFont();
+        font.setColor(Color.YELLOW);
+        font.getData().setScale(2);
 
         camera = new OrthographicCamera();
         camera.setToOrtho(false, 800, 800);
@@ -50,37 +54,21 @@ public class GameScreen implements Screen {
         playerOneViewport = new ScreenViewport(playerOneCamera);
         playerTwoViewport = new ScreenViewport(playerTwoCamera);
 
+        blueCar = new Car("Blue Car", "car1.png", 700, 0, MovementType.WASD);
+        redCar = new Car("Red Car", "car2.png", 500, 0, MovementType.AI);
 
-        blueCar = new Car("Blue Car", "car1.png", 700, -540, MovementType.WASD);
-        redCar = new Car("Red Car", "car2.png", 500, 0, MovementType.RLUD);
-
-        bg = new Background();
         road = new Road();
         batch = game.batch;
 
-        blueCarThread = new Thread(blueCar, "Blue Car Thread");
-        redCarThread = new Thread(redCar, "Red Car Thread");
-        shapeRenderer = new ShapeRenderer();
-
-        blueCarThread.start();
-        redCarThread.start();
-
         batch = new SpriteBatch();
 
-        // Initialize the array of obstacles
-        int numberOfObstacles = 5;
-        Obstacls = new Obstacle[numberOfObstacles];
+        numberOfObstacles = 3;
+        obstacles = new ArrayList< >(numberOfObstacles);
+         for (int i = 0; i < numberOfObstacles; i++) {
+            float x = (float) (Math.random() * (800 - 64));
+            float y = camera.position.y + (float) (Math.random() * 800);
+            obstacles.add(new Obstacle(x, y, 0, 800));}
 
-        // Get screen dimensions
-        float screenWidth = Gdx.graphics.getWidth();
-        float screenHeight = Gdx.graphics.getHeight();
-
-        // Initialize obstacles at random positions
-        for (int i = 0; i < numberOfObstacles; i++) {
-            float x = MathUtils.random(0, screenWidth - 64); // Adjust 64 to the width of your texture
-            float y = MathUtils.random(0, screenHeight - 64); // Adjust 64 to the height of your texture
-            Obstacls[i] = new Obstacle(x,y  );
-        }
     }
 
     @Override
@@ -94,57 +82,65 @@ public class GameScreen implements Screen {
         viewport.apply();
         Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), 800);
 
-        updateCamera(camera, blueCar);
-        batch.setProjectionMatrix(camera.combined);
-
-
-
+        redCar.setObstacles(obstacles); // Set obstacles for the red car AI
+        blueCar.setObstacles(obstacles);
 
         updateAll(delta);
-        renderAll();
-        //drawBorders();
+        if (blueCar.getSpeedY() != 0) {
+            updateCamera(camera, blueCar);
+        }
+        batch.setProjectionMatrix(camera.combined);
 
+        if (blueCar.getSprite().getY() != 0&& (int) blueCar.getSpeedY() != 0){
+            isBlueCarMoving = true;
+            blueCarScore++;
+            System.out.println(blueCar.getSpeedY());
+        } else {
+            isBlueCarMoving = false;
+        }
+
+
+        renderAll();
     }
 
     @Override
     public void resize(int width, int height) {
-//        playerOneViewport.update(width / 2, height);
-//        playerTwoViewport.update(width, height);
-//        playerTwoViewport.setScreenX(width / 2);
         viewport.update(width, height);
     }
 
     private void updateAll(float delta) {
-        road.update(delta, camera.position.y);
         synchronized (blueCar) {
             blueCar.update(delta);
-            keepWithinBounds(blueCar);
+            checkCollision(blueCar, delta);
         }
         synchronized (redCar) {
             redCar.update(delta);
-            keepWithinBounds(redCar);
+            checkCollision(redCar, delta);
         }
-//        for (Obstacals obstacle : Obstacals) {
-//            obstacle.update(delta, blueCar.getSpeedY());
-//        }
-//       road.update(delta, playerTwoCamera.position.y);
+        for (Obstacle obstacle : obstacles) {
+            obstacle.update(delta, camera.position.y, Gdx.graphics.getHeight());
+        }
+        road.update(delta, camera.position.y, blueCar.getSpeedY());
     }
 
     private void renderAll() {
-        //   updateCamera(camera, blueCar);
         batch.setProjectionMatrix(camera.combined);
         batch.begin();
         road.render(batch, camera.position.y);
-        for (Obstacle obstacle : Obstacls) {
+        for (Obstacle obstacle : obstacles) {
             obstacle.render(batch);
         }
         synchronized (blueCar) {
             blueCar.getSprite().draw(batch);
         }
-
         synchronized (redCar) {
             redCar.getSprite().draw(batch);
         }
+        font.draw(batch, "Blue Car Score: " + blueCarScore, 300 , 0+ camera.position.y +blueCar.getSprite().getHeight()+250);
+
+        font.draw(batch, "Health: " + blueCarHealth, 300 ,  camera.position.y +blueCar.getSprite().getHeight()+200);
+        if (gameOver){font.draw(batch, "Game Over!", camera.position.x/2, camera.position.y /2);}
+
         batch.end();
     }
 
@@ -152,25 +148,39 @@ public class GameScreen implements Screen {
         camera.position.set(camera.position.x, car.getPosition().y + car.getSprite().getHeight() / 2, 0);
         camera.update();
     }
-    private void keepWithinBounds(Car car) {
-        float carWidth = car.getSprite().getWidth();
-        float carHeight = car.getSprite().getHeight();
-      //  System.out.println("Car x: " + car.getPosition().x + " Car y: " + car.getPosition().y);
-        // Ensure the car stays within the screen bounds
-        if (car.getPosition().x < 350) {
-            car.setPosition(350, car.getPosition().y);
+
+    private void checkCollision(Car car, float delta) {
+        boolean collisionDetected = false;
+        for (Obstacle obstacle : obstacles) {
+            if (car.getRectangle().overlaps(obstacle.getBounds())) {
+                car.stopCar();
+                collisionDetected = true;
+                if (car == blueCar) {
+                    blueCarHealth--;
+                    obstacle.remove();
+                    obstacle.dispose();
+                    obstacle.update(delta, camera.position.y, Gdx.graphics.getHeight());
+                    if (blueCarHealth <= 0) {
+                        handleGameOver();
+                        break;
+                    }
+                }
+            }
         }
-        if (car.getPosition().x > 800) {
-            car.setPosition(800 , car.getPosition().y);
+
+        if (!collisionDetected &&  (int)car.getSpeedY() == 0) {
+            car.startCar();
+            car.setSpeedY(car.getAcceleration() * delta);
         }
-        if (car.getPosition().y < 0) {
-            car.setPosition(car.getPosition().x, 0);
-        }
-//        if (car.getPosition().y + carHeight > Gdx.graphics.getHeight()) {
-//            car.setPosition(car.getPosition().x, Gdx.graphics.getHeight() - carHeight);
-//        }
     }
 
+
+    private void handleGameOver() {
+        System.out.println("Game Over!");
+        gameOver=true;
+        blueCarHealth = 4;
+        blueCarScore = 0;
+    }
     @Override
     public void pause() {
         // Handle pause
@@ -191,10 +201,9 @@ public class GameScreen implements Screen {
         blueCar.dispose();
         redCar.dispose();
         batch.dispose();
-        for (Obstacle obstacle : Obstacls) {
+        for (Obstacle obstacle : obstacles) {
             obstacle.dispose();
         }
-
-
+        font.dispose();
     }
 }
