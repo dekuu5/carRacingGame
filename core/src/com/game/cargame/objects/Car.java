@@ -99,9 +99,7 @@ public class Car implements Runnable {
         if (position.y < 0) {
             position.y = 0;
         }
-        if (position.y > Gdx.graphics.getHeight() - rect.height) {
-            position.y = Gdx.graphics.getHeight() - rect.height;
-        }
+
     }
     private void updateSpeedWASD(float delta) {
         if (Gdx.input.isKeyPressed(Input.Keys.W)) {

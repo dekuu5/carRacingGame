@@ -20,6 +20,8 @@ import java.util.List;
 
 public class GameScreen implements Screen {
     final CarGame game;
+    Thread blueCarThread;
+    Thread redCarThread;
     int blueCarScore = 0;
     int blueCarHealth = 4;
     OrthographicCamera camera;
@@ -56,6 +58,11 @@ public class GameScreen implements Screen {
 
         blueCar = new Car("Blue Car", "car1.png", 700, 0, MovementType.WASD);
         redCar = new Car("Red Car", "car2.png", 500, 0, MovementType.AI);
+        blueCarThread = new Thread(blueCar, "Blue Car Thread");
+        redCarThread = new Thread(redCar, "Red Car Thread");
+
+        blueCarThread.start();
+        redCarThread.start();
 
         road = new Road();
         batch = game.batch;
@@ -116,6 +123,7 @@ public class GameScreen implements Screen {
         synchronized (redCar) {
             redCar.update(delta);
             checkCollision(redCar, delta);
+            System.out.println(redCar.getPosition().y);
         }
         for (Obstacle obstacle : obstacles) {
             obstacle.update(delta, camera.position.y, Gdx.graphics.getHeight());
@@ -158,13 +166,14 @@ public class GameScreen implements Screen {
                 if (car == blueCar) {
                     blueCarHealth--;
                     obstacle.remove();
-                    obstacle.dispose();
                     obstacle.update(delta, camera.position.y, Gdx.graphics.getHeight());
                     if (blueCarHealth <= 0) {
                         handleGameOver();
                         break;
                     }
+
                 }
+
             }
         }
 
@@ -178,7 +187,7 @@ public class GameScreen implements Screen {
     private void handleGameOver() {
         System.out.println("Game Over!");
         gameOver=true;
-        blueCarHealth = 4;
+//        blueCarHealth = 4;
         blueCarScore = 0;
     }
     @Override
